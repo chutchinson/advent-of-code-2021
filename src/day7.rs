@@ -9,11 +9,11 @@ fn main() {
         .flat_map(|line| line.split(",").map(|x| x.parse::<i32>().expect("failed to parse integer")).collect::<Vec<_>>())
         .collect();
 
-    println!("{}", find_minimum_fuel(&measurements, constant_fuel_cost));
-    println!("{}", find_minimum_fuel(&measurements, variable_fuel_cost));
+    println!("{}", find_minimum_position(&measurements, constant_fuel_cost));
+    println!("{}", find_minimum_position(&measurements, variable_fuel_cost));
 }
 
-fn diff(positions: &Vec<i32>, pos: i32, cost: fn(i32) -> i32) -> i32 {
+fn calculate_fuel_cost(positions: &Vec<i32>, pos: i32, cost: fn(i32) -> i32) -> i32 {
     positions.iter()
         .map(|p| {
             let delta = (p - pos).abs();
@@ -27,16 +27,14 @@ fn constant_fuel_cost (distance: i32) -> i32 {
 }
 
 fn variable_fuel_cost (distance: i32) -> i32 {
-    distance
+    (distance * (distance + 1)) / 2
 }
 
-fn find_minimum_fuel(positions: &Vec<i32>, cost: fn(i32) -> i32) -> i32 {
+fn find_minimum_position(positions: &Vec<i32>, cost: fn(i32) -> i32) -> i32 {
     let pos = positions.clone();
-    let min = positions.iter().min().unwrap();
     let max = positions.iter().max().unwrap();
-    let range = 0..(max-min);
-    let min_pos = range.map(|x| diff(&pos, x, cost)).min().unwrap();
-    min_pos
+    let range = 0..*max+1;
+    range.map(|x| calculate_fuel_cost(&pos, x, cost)).min().unwrap()
 }
 
 #[cfg(test)]
@@ -46,13 +44,13 @@ mod tests {
     #[test]
     fn example_1() {
         let v = vec![16,1,2,0,4,2,7,1,2,14];
-        assert_eq!(37, find_minimum_fuel(&v, constant_fuel_cost));
+        assert_eq!(37, find_minimum_position(&v, constant_fuel_cost));
     }
 
     #[test]
     fn example_2() {
         let v = vec![16,1,2,0,4,2,7,1,2,14];
-        // 16 - 5 = 11
-        assert_eq!(206, find_minimum_fuel(&v, variable_fuel_cost));
+        assert_eq!(206, calculate_fuel_cost(&v, 2, variable_fuel_cost));
+        assert_eq!(168, find_minimum_position(&v, variable_fuel_cost));
     }
 }
